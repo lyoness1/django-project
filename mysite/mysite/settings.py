@@ -31,7 +31,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+<<<<<<< HEAD
     'polls.apps.PollsConfig',
+=======
+>>>>>>> 8b9b7d3... starting project
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
