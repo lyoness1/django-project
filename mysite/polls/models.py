@@ -19,6 +19,9 @@ class Question(models.Model):
     def was_published_recently(self):
         return self.pub_date >= timezone.now() - datetime.timedelta(days=1)
 
+    def do_nothing(self):
+        pass
+
 
 @python_2_unicode_compatible
 class Choice(models.Model):
