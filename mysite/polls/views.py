@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.template import loader
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from .models import Question
 
 
@@ -26,7 +26,17 @@ def index(request):
 
 
 def detail(request, question_id):
-    return HttpResponse("You're looking at question %s." % question_id)
+    """View the details of a question"""
+
+    # make sure question exists
+    try:
+        question = Question.objects.get(pk=question_id)
+    except Question.DoesNotExist:
+        raise Http404("Question does not exist")
+
+    # return rendered template for question's detail view
+    return render(request, 'polls/detail.html', {'question': question})
+
 
 def results(request, question_id):
     response = "You're looking at the results of question %s."
