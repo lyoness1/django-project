@@ -1,55 +1,29 @@
 from django.shortcuts import render, get_object_or_404
-from django.template import loader
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
-from .models import Question, Choice
+from django.views import generic
 from django.db.models import F
 
-
-def index(request):
-    """Renders the home page of the polls app."""
-
-    # get the most recent 5 questions from the db
-    latest_question_list = Question.objects.order_by('-pub_date')[:5]
-
-    # load the index template from polls/templates/polls/
-    template = loader.get_template('polls/index.html')
-
-    # set up context as dictionary with variables to pass to render view
-    context = {
-        'latest_question_list': latest_question_list,
-    }
-
-    # render the template with the context as a response to the request
-    return HttpResponse(template.render(context, request))
-
-    # can also use (negates the need for 'loader' and 'HttpResponse' objects):
-    # return render(request, 'polls/index.html', context)
+from .models import Question, Choice
 
 
-def detail(request, question_id):
-    """View the details of a question"""
+class IndexView(generic.ListView):
+    template_name = 'polls/index.html'
+    context_object_name = 'latest_question_list'
 
-    # make sure question exists
-    try:
-        question = Question.objects.get(pk=question_id)
-    except Question.DoesNotExist:
-        raise Http404("Question does not exist")
-
-    # return rendered template for question's detail view
-    return render(request, 'polls/detail.html', {'question': question})
-
-    # could also use get() and riase Http404:
-
-    # question = get_object_or_404(Question, pk=question_id)
-    # return render(request, 'polls/detail.html', {'question': question})
+    def get_queryset(self):
+        """Return the last five published questions."""
+        return Question.objects.order_by('-pub_date')[:5]
 
 
-def results(request, question_id):
-    """Displays the results of the poll after voting"""
+class DetailView(generic.DetailView):
+    model = Question
+    template_name = 'polls/detail.html'
 
-    question = get_object_or_404(Question, pk=question_id)
-    return render(request, 'polls/results.html', {'question': question})
+
+class ResultsView(generic.DetailView):
+    model = Question
+    template_name = 'polls/results.html'
 
 
 def vote(request, question_id):
@@ -61,18 +35,15 @@ def vote(request, question_id):
     # get choice voted for (request.CHOICE['choice'] returns str of choice ID)
     # or insist the user votes again with error msg
     try:
-        selected_choice = question.choice_set.get(pk=request.POST['choice'])
+        selected_choice = question.choice_set.filter(pk=request.POST['choice'])
     except (KeyError, Choice.DoesNotExist):
         # redisplay the question voting form (details view)
         return render(request, 'polls/detail.html', {
             'question': question,
             'error_message': "You didn't select a choice."
         })
-    # increment votes for choice. Use of F() allows simultaneous voting
-    # redirects to results view
     else:
-        selected_choice.update(votes = F('votes') + 1)
+        selected_choice.update(votes=F('votes') + 1)
         return HttpResponseRedirect(
             reverse('polls:results', args=(question.id,))
         )
-
