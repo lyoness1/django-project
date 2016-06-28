@@ -8,6 +8,8 @@ from .models import Question, Choice
 
 
 class IndexView(generic.ListView):
+    """Displays generic view of index.html with question list"""
+
     template_name = 'polls/index.html'
     context_object_name = 'latest_question_list'
 
